@@ -18,11 +18,12 @@ const double minValue = 0.0;
 const double maxValue = 360.0;
 const double randomCoef = 0.0174533;
 
+#define EPS 0.1;
+
 // ------------------
 // |   VARIABLES    |
 // ------------------
 
-const double eps = 0.0000000000001;
 int globalCyclesCount = 0;
 double globalDeviage = 0.0;
 
@@ -30,182 +31,99 @@ double globalDeviage = 0.0;
 // | CALCULATIONS |
 // ----------------
 
-bool isDiagonalDominanceBroken(vector<vector<double>> matrix)
+vector<double> calculate(vector<vector<double>> matrix, vector<double>(*f)(vector<double> current, vector<vector<double>> alpha, vector<double> betta))
 {
-    bool flag = true;
     int size = matrix.size();
-    for (int i = 0; i < size && flag; i++)
+    
+    // calculate betta
+    vector<double> betta(size, 0.0);
+    for (int i = 0; i < size; i++) 
     {
-        double fabsSum = 0.0;
-        for (int j = 0; j < size; j++)
+        betta[i] = matrix[i][size] / matrix[i][i];
+    }
+
+    // calculate betta
+    vector<vector<double>> alpha(size, vector<double>(size, 0.0));
+    for (int i = 0; i < size; i++) 
+    {
+        for (int j = 0; j < size; j++) 
+        {
             if (i != j)
-                fabsSum += fabs(matrix[i][j]);
-        flag = fabs(matrix[i][i]) <= fabsSum;
-    }
-    return flag;
-}
-
-bool isDiverged(vector<double> result, vector<double> temp, double eps)
-{
-    bool flag = true;
-    int size = result.size();
-    for (int i = 0; i < size && flag; i++)
-        flag = fabs(temp[i] - result[i]) < eps;
-    return flag;
-}
-
-vector<double> parallelAlgorithmCalculate(vector<vector<double>> matrix)
-{
-    int size = matrix.size();
-    vector<double> result(size, 0.0);
-    vector<double> temp(size, 0.0);
-    int count = 0;
-    for (bool flag = !isDiagonalDominanceBroken(matrix); flag; count++)
-    {
-#pragma omp parallel for
-        for (int i = 0; i < size; i++)
-        {
-            double sum = 0.0;
             {
-#pragma omp parallel for
-                for (int j = 0; j < size; j++)
-                    if (i != j)
-                        sum += matrix[i][j] * result[j];
-                temp[i] = (matrix[i][size] - sum) / matrix[i][i];
+                alpha[i][j] = - matrix[i][j] / matrix[i][i];
             }
         }
-        flag = !isDiverged(result, temp, eps);
-        if (flag)
-            for (int i = 0; i < size; i++)
-                result[i] = temp[i];
     }
-    globalCyclesCount = count;
-    return result;
+
+    // initial result
+    vector<double> currentResult(size, 0.0);
+    for (int i = 0; i < size; i++) 
+    {
+        currentResult[i] = betta[i];
+    }
+
+    int cyclesCount = 0;
+    bool foundResult = false;
+    for (cyclesCount = 0; cyclesCount < 100 && !foundResult; cyclesCount++) 
+    {
+        // calculate new result
+        vector<double> newResult = f(currentResult, alpha, betta);
+
+        // check epsilon
+        bool hasGreaterEpsValue = false;
+        int i = 0;
+        for (i = 0; i < size && !hasGreaterEpsValue; i++)
+        {
+            hasGreaterEpsValue = fabs(currentResult[i] - newResult[i]) > EPS;
+        }
+
+        // check if should end calculation
+        if (!hasGreaterEpsValue) 
+        {
+            foundResult = true;
+        }
+        
+        // copy new result to current result
+        for (int j = 0; j < size; j++) 
+        {
+            currentResult[j] = newResult[j];
+        }
+    }
+    
+    globalCyclesCount = cyclesCount;
+    return currentResult;
 }
 
-vector<double> parallelSectionsCalculate(vector<vector<double>> matrix)
-{
-
-    int size = matrix.size();
-    vector<double> result(size, 0.0);
-    vector<double> temp(size, 0.0);
-    int count = 0;
-
-    for (bool flag = !isDiagonalDominanceBroken(matrix); flag; count++)
+vector<double> calculateSeq(vector<double> currentResult, vector<vector<double>> alpha, vector<double> betta) {
+    int size = currentResult.size();
+    vector<double> newResult(size, 0.0);
+    for (int i = 0; i < size; i++) 
     {
-#pragma omp parallel sections
+        double sum = betta[i];
+        for (int j = 0; j < size; j++) 
         {
-#pragma omp section
-            {
-                for (int i = 0; i < size * 0.25; i++)
-                {
-                    double sum = 0.0;
-
-                    for (int j = 0; j < size; j++)
-                        if (i != j)
-                            sum += matrix[i][j] * result[j];
-                    temp[i] = (matrix[i][size] - sum) / matrix[i][i];
-                }
-            }
-#pragma omp section
-            {
-                for (int i = size * 0.25; i < size * 0.5; i++)
-                {
-                    double sum = 0.0;
-
-                    for (int j = 0; j < size; j++)
-                        if (i != j)
-                            sum += matrix[i][j] * result[j];
-                    temp[i] = (matrix[i][size] - sum) / matrix[i][i];
-                }
-            }
-#pragma omp section
-            {
-                for (int i = size * 0.5; i < size * 0.75; i++)
-                {
-                    double sum = 0.0;
-
-                    for (int j = 0; j < size; j++)
-                        if (i != j)
-                            sum += matrix[i][j] * result[j];
-                    temp[i] = (matrix[i][size] - sum) / matrix[i][i];
-                }
-            }
-#pragma omp section
-            {
-                for (int i = size * 0.75; i < size; i++)
-                {
-                    double sum = 0.0;
-
-                    for (int j = 0; j < size; j++)
-                        if (i != j)
-                            sum += matrix[i][j] * result[j];
-                    temp[i] = (matrix[i][size] - sum) / matrix[i][i];
-                }
-            }
+            sum += alpha[i][j] * currentResult[j];
         }
-        flag = !isDiverged(result, temp, eps);
-        if (flag)
-            for (int i = 0; i < size; i++)
-                result[i] = temp[i];
+        newResult[i] = sum;
     }
-    globalCyclesCount = count;
-    return result;
+    return newResult;
 }
 
-vector<double> parallelCyclesCalculate(vector<vector<double>> matrix)
-{
-    int size = matrix.size();
-    vector<double> result(size, 0.0);
-    vector<double> temp(size, 0.0);
-    int count = 0;
-    for (bool flag = !isDiagonalDominanceBroken(matrix); flag; count++)
+vector<double> calculateParallel(vector<double> currentResult, vector<vector<double>> alpha, vector<double> betta) {
+    int size = currentResult.size();
+    vector<double> newResult(size, 0.0);
+    int i = 0;
+#pragma omp parallel for shared(newResult) private(i) schedule (static)
+    for (i = 0; i < size; i++) 
     {
-#pragma omp parallel for
-        for (int i = 0; i < size; i++)
+        double sum = betta[i];
+        for (int j = 0; j < size; j++) 
         {
-            double sum = 0.0;
-            {
-#pragma omp parallel for
-                for (int j = 0; j < size; j++)
-                    if (i != j)
-                        sum += matrix[i][j] * result[j];
-                temp[i] = (matrix[i][size] - sum) / matrix[i][i];
-            }
+            sum += alpha[i][j] * currentResult[j];
         }
-        flag = !isDiverged(result, temp, eps);
-        if (flag)
-#pragma omp parallel for
-            for (int i = 0; i < size; i++)
-                result[i] = temp[i];
+        newResult[i] = sum;
     }
-    globalCyclesCount = count;
-    return result;
-}
-
-vector<double> sequentialCalculate(vector<vector<double>> matrix)
-{
-    int size = matrix.size();
-    vector<double> result(size, 0.0);
-    vector<double> temp(size, 0.0);
-    int count = 0;
-    for (bool flag = !isDiagonalDominanceBroken(matrix); flag; count++)
-    {
-        for (int i = 0; i < size; i++)
-        {
-            double sum = 0.0;
-            for (int j = 0; j < size; j++)
-                if (i != j)
-                    sum += matrix[i][j] * result[j];
-            temp[i] = (matrix[i][size] - sum) / matrix[i][i];
-        }
-        flag = !isDiverged(result, temp, eps);
-        if (flag)
-            for (int i = 0; i < size; i++)
-                result[i] = temp[i];
-    }
-    globalCyclesCount = count;
-    return result;
+    return newResult;
 }
 
 double averageDeviationCalculate(vector<vector<double>> matrix, vector<double> result)
@@ -229,9 +147,7 @@ double averageDeviationCalculate(vector<vector<double>> matrix, vector<double> r
 enum class TestTypes
 {
 	SEQUENTIAL,
-	PARALLEL_CYCLES,
-	PARALLEL_SECTIONS,
-	PARALLEL_ALGORITHM,
+	PARALLEL
 };
 
 template<typename T>
@@ -241,12 +157,8 @@ void getTestType(T index)
 	{
 	case TestTypes::SEQUENTIAL: 
         cout << "Sequential method"; break;
-	case TestTypes::PARALLEL_CYCLES: 
-        cout << "Parallel with cycles method"; break;
-	case TestTypes::PARALLEL_SECTIONS: 
-        cout << "Parallel with sections method"; break;
-	case TestTypes::PARALLEL_ALGORITHM: 
-        cout << "Parallel with algorithm method"; break;
+	case TestTypes::PARALLEL: 
+        cout << "Parallel method"; break;
 	default: 
         cout << "Unknown method";
 	}
@@ -281,6 +193,11 @@ void display(vector<vector<double>> array)
 	cout << endl;
 }
 
+double dRand(double fMin, double fMax)
+{
+    double f = (double)rand() / RAND_MAX;
+    return fMin + f * (fMax - fMin);
+}
 
 // ----------------
 // |   ANALYZE    |
@@ -323,10 +240,14 @@ double performTest(vector<vector<double>> matrix, TestTypes type) {
     double start = omp_get_wtime();
     switch (type)
     {
-    case TestTypes::SEQUENTIAL: result = sequentialCalculate(matrix); break;
-    case TestTypes::PARALLEL_CYCLES: result = parallelCyclesCalculate(matrix); break;
-    case TestTypes::PARALLEL_SECTIONS: result = parallelSectionsCalculate(matrix); break;
-    case TestTypes::PARALLEL_ALGORITHM: result = parallelAlgorithmCalculate(matrix); break;
+    case TestTypes::SEQUENTIAL: 
+        // result = sequentialCalculate(matrix); 
+        result = calculate(matrix, &calculateSeq);
+        break;
+    case TestTypes::PARALLEL: 
+        // result = parallelCyclesCalculate(matrix); 
+        result = calculate(matrix, &calculateParallel);
+        break;
     default: break;
     }
     double end = omp_get_wtime(), time = (end - start) * 1000;
@@ -374,8 +295,7 @@ vector<vector<double>> init(int depth, double min, double max)
 		for (int j = 0; j < depth; j++)
 			if (j != i)
 				fabsSum += fabs(matrix[i][j]);
-		while (fabs(matrix[i][i]) < fabsSum)
-			matrix[i][i] += distribution(rand);
+        matrix[i][i] = fabsSum * dRand(1.1, 3.0);
 	}
 
 	for (int i = 0; i < depth; i++)
@@ -412,8 +332,8 @@ int main()
 	cin >> count;
 
     cout << "---------------------------------------------------------\n";
-    cout << "| Types: SEQUENTIAL, PARALLEL_CYCLES/SECTIONS/ALGORITHM |\n";
+    cout << "| Types: SEQUENTIAL, PARALLEL |\n";
     cout << "---------------------------------------------------------\n";
-	vector<TestTypes> types = { TestTypes::SEQUENTIAL, TestTypes::PARALLEL_CYCLES, TestTypes::PARALLEL_SECTIONS, TestTypes::PARALLEL_ALGORITHM };
+	vector<TestTypes> types = { TestTypes::SEQUENTIAL, TestTypes::PARALLEL };
 	performTests(matrix, types, count);
 }

@@ -41,15 +41,15 @@ vector<vector<double>> parallelScheduleStaticCalculate(vector<vector<double>> ar
 	int size = arrayA.size();
 	vector<vector<double>>array(size, vector<double>(size, 0.0));
 
-#pragma omp parallel shared(arrayA, arrayB) private(i, size);
-	{
-		for (int i = 0; i < size; i++)
-#pragma omp for schedule (static)
-			for (int j = 0; j < size; j++)
-				array[i][j] = calculate(arrayA[i][j], arrayB[i][j]);
+	int i = 0;
+#pragma omp parallel for shared(arrayA, arrayB) private(i) schedule (static) collapse(2)
 
-		return array;
-	}
+	for (i = 0; i < size; i++)
+		for (int j = 0; j < size; j++)
+			array[i][j] = calculate(arrayA[i][j], arrayB[i][j]);
+
+	return array;
+	
 }
 
 vector<vector<double>> parallelScheduleDynamicCalculate(vector<vector<double>> arrayA, vector<vector<double>> arrayB)
@@ -57,15 +57,13 @@ vector<vector<double>> parallelScheduleDynamicCalculate(vector<vector<double>> a
 	int size = arrayA.size();
 	vector<vector<double>>array(size, vector<double>(size, 0.0));
 
-#pragma omp parallel shared(arrayA, arrayB) private(i, size); 
-	{
-		for (int i = 0; i < size; i++)
-#pragma omp for schedule (dynamic)
-			for (int j = 0; j < size; j++)
-				array[i][j] = calculate(arrayA[i][j], arrayB[i][j]);
+	int i = 0;
+#pragma omp parallel for shared(arrayA, arrayB) private(i) schedule (dynamic) collapse(2)
+	for (i = 0; i < size; i++)
+		for (int j = 0; j < size; j++)
+			array[i][j] = calculate(arrayA[i][j], arrayB[i][j]);
 
-		return array;
-	}
+	return array;
 }
 
 vector<vector<double>> parallelScheduleDynamic2Calculate(vector<vector<double>> arrayA, vector<vector<double>> arrayB)
@@ -73,15 +71,13 @@ vector<vector<double>> parallelScheduleDynamic2Calculate(vector<vector<double>> 
 	int size = arrayA.size();
 	vector<vector<double>>array(size, vector<double>(size, 0.0));
 
-#pragma omp parallel shared(arrayA, arrayB) private(i, size); 
-	{
-		for (int i = 0; i < size; i++)
-#pragma omp for schedule (dynamic, 2)
-			for (int j = 0; j < size; j++)
-				array[i][j] = calculate(arrayA[i][j], arrayB[i][j]);
+	int i = 0;
+#pragma omp parallel for shared(arrayA, arrayB) private(i) schedule (dynamic, 2) collapse(2)
+	for (i = 0; i < size; i++)
+		for (int j = 0; j < size; j++)
+			array[i][j] = calculate(arrayA[i][j], arrayB[i][j]);
 
-		return array;
-	}
+	return array;
 }
 
 vector<vector<double>> parallelScheduleDynamic4Calculate(vector<vector<double>> arrayA, vector<vector<double>> arrayB)
@@ -89,15 +85,13 @@ vector<vector<double>> parallelScheduleDynamic4Calculate(vector<vector<double>> 
 	int size = arrayA.size();
 	vector<vector<double>>array(size, vector<double>(size, 0.0));
 
-#pragma omp parallel shared(arrayA, arrayB) private(i, size); 
-	{
-		for (int i = 0; i < size; i++)
-#pragma omp for schedule (dynamic, 4)
-			for (int j = 0; j < size; j++)
-				array[i][j] = calculate(arrayA[i][j], arrayB[i][j]);
+	int i = 0;
+#pragma omp parallel for shared(arrayA, arrayB) private(i) schedule (dynamic, 4) collapse(2)
+	for (i = 0; i < size; i++)
+		for (int j = 0; j < size; j++)
+			array[i][j] = calculate(arrayA[i][j], arrayB[i][j]);
 
-		return array;
-	}
+	return array;
 }
 
 vector<vector<double>> parallelScheduleDynamic6Calculate(vector<vector<double>> arrayA, vector<vector<double>> arrayB)
@@ -105,15 +99,13 @@ vector<vector<double>> parallelScheduleDynamic6Calculate(vector<vector<double>> 
 	int size = arrayA.size();
 	vector<vector<double>>array(size, vector<double>(size, 0.0));
 
-#pragma omp parallel shared(arrayA, arrayB) private(i, size); 
-	{
-		for (int i = 0; i < size; i++)
-#pragma omp for schedule (dynamic, 6)
-			for (int j = 0; j < size; j++)
-				array[i][j] = calculate(arrayA[i][j], arrayB[i][j]);
+	int i = 0;
+#pragma omp parallel for shared(arrayA, arrayB) private(i) schedule (dynamic, 6) collapse(2)
+	for (i = 0; i < size; i++)
+		for (int j = 0; j < size; j++)
+			array[i][j] = calculate(arrayA[i][j], arrayB[i][j]);
 
-		return array;
-	}
+	return array;
 }
 
 vector<vector<double>> parallelScheduleGuidedCalculate(vector<vector<double>> arrayA, vector<vector<double>> arrayB)
@@ -121,15 +113,13 @@ vector<vector<double>> parallelScheduleGuidedCalculate(vector<vector<double>> ar
 	int size = arrayA.size();
 	vector<vector<double>>array(size, vector<double>(size, 0.0));
 
-#pragma omp parallel shared(arrayA, arrayB) private(i, size); 
-	{
-		for (int i = 0; i < size; i++)
-#pragma omp for schedule (guided) 
-			for (int j = 0; j < size; j++)
-				array[i][j] = calculate(arrayA[i][j], arrayB[i][j]);
+	int i = 0;
+#pragma omp parallel for shared(arrayA, arrayB) private(i) schedule (guided) collapse(2)
+	for (i = 0; i < size; i++)
+		for (int j = 0; j < size; j++)
+			array[i][j] = calculate(arrayA[i][j], arrayB[i][j]);
 
-		return array;
-	}
+	return array;
 }
 
 vector<vector<double>> parallelColumnsCalculate(vector<vector<double>> arrayA, vector<vector<double>> arrayB)
@@ -137,15 +127,13 @@ vector<vector<double>> parallelColumnsCalculate(vector<vector<double>> arrayA, v
 	int size = arrayA.size();
 	vector<vector<double>>array(size, vector<double>(size, 0.0));
 
-#pragma omp parallel shared(arrayA, arrayB) private(i, size);
-	{
-		for (int i = 0; i < size; i++)
-#pragma omp for
-			for (int j = 0; j < size; j++)
-				array[i][j] = calculate(arrayA[i][j], arrayB[i][j]);
+	int i = 0;
+#pragma omp parallel for shared(arrayA, arrayB) private(i)
+	for (i = 0; i < size; i++)
+		for (int j = 0; j < size; j++)
+			array[i][j] = calculate(arrayA[i][j], arrayB[i][j]);
 
-		return array;
-	}
+	return array;
 }
 
 vector<vector<double>> parallelBlocksCalculate(vector<vector<double>> arrayA, vector<vector<double>> arrayB)
@@ -153,31 +141,29 @@ vector<vector<double>> parallelBlocksCalculate(vector<vector<double>> arrayA, ve
 	int size = arrayA.size();
 	vector<vector<double>>array(size, vector<double>(size, 0.0));
 
-#pragma omp parallel shared(arrayA, arrayB) private(i, size);
-	{
-#pragma omp for
-		for (int i = 0; i < size; i++)
-#pragma omp for
-			for (int j = 0; j < size; j++)
-				array[i][j] = calculate(arrayA[i][j], arrayB[i][j]);
+	int i = 0;
+	omp_set_nested(true);
+#pragma omp parallel for shared(arrayA, arrayB) private(i)
+	for (i = 0; i < size; i++)
+#pragma omp parallel for shared(arrayA, arrayB)
+		for (int j = 0; j < size; j++)
+			array[i][j] = calculate(arrayA[i][j], arrayB[i][j]);
 
-		return array;
-	}
+	return array;
 }
 
 vector<vector<double>> parallelRowsCalculate(vector<vector<double>> arrayA, vector<vector<double>> arrayB)
 {
 	int size = arrayA.size();
 	vector<vector<double>>array(size, vector<double>(size, 0.0));
-#pragma omp parallel 
-	{
-#pragma omp for
-		for (int i = 0; i < size; i++)
-			for (int j = 0; j < size; j++)
-				array[i][j] = calculate(arrayA[i][j], arrayB[i][j]);
 
-		return array;
-	}
+	int i = 0;
+	for (i = 0; i < size; i++)
+#pragma omp parallel for shared(arrayA, arrayB)
+		for (int j = 0; j < size; j++)
+			array[i][j] = calculate(arrayA[i][j], arrayB[i][j]);
+
+	return array;
 }
 
 vector<vector<double>> seqentialCalculate(vector<vector<double>> arrayA, vector<vector<double>> arrayB)
@@ -375,7 +361,7 @@ int main()
 	cin >> count;
 	cout << "Tests count: " << count << endl << endl;
 
-	vector<TestTypes> types = { TestTypes::SEQENTIAL, TestTypes::PARALLEL_ROWS, TestTypes::PARALLEL_COLUMNS, TestTypes::PARALLEL_BLOCKS };
+	vector<TestTypes> types = { TestTypes::SEQENTIAL, TestTypes::PARALLEL_BLOCKS, TestTypes::PARALLEL_COLUMNS, TestTypes::PARALLEL_ROWS };
 	tests(arrayA, arrayB, types, count);
 
 	types = { TestTypes::PARALLEL_SCHEDULE_STATIC, TestTypes::PARALLEL_SCHEDULE_DYNAMIC, TestTypes::PARALLEL_SCHEDULE_GUIDED };
